@@ -142,7 +142,7 @@ def show_venue(venue_id):
         "genres": venue.genres,
         "seeking_talent": venue.seeking_talent,
         "seeking_description": venue.seeking_description,
-        "website_link": venue.website_link,
+        "website": venue.website_link,
         "past_shows": past_shows,
         "upcoming_shows": upcoming_shows,
         "past_shows_count": len(past_shows),
@@ -162,47 +162,53 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    try:
-        form = VenueForm(request.form)
-        name = form.name.data.strip()
-        city = form.city.data.strip()
-        state = form.state.data.strip()
-        address = form.address.data.strip()
-        phone = form.phone.data.strip()
-        image_link = form.image_link.data.strip()
-        facebook_link = form.facebook_link.data.strip()
-        genres = ",".join(form.genres.data)
-        seeking_talent = form.seeking_talent.data
-        seeking_description = form.seeking_description.data.strip()
-        website = form.website_link.data.strip()
+    form = VenueForm(request.form)
+    if form.validate_on_submit():
+        try:
+            name = form.name.data.strip()
+            city = form.city.data.strip()
+            state = form.state.data.strip()
+            address = form.address.data.strip()
+            phone = form.phone.data.strip()
+            image_link = form.image_link.data.strip()
+            facebook_link = form.facebook_link.data.strip()
+            genres = form.genres.data
+            seeking_talent = form.seeking_talent.data
+            seeking_description = form.seeking_description.data.strip()
+            website = form.website_link.data.strip()
 
-        venue = Venue(
-            name=name,
-            city=city,
-            state=state,
-            address=address,
-            phone=phone,
-            image_link=image_link,
-            facebook_link=facebook_link,
-            genres=genres,
-            seeking_talent=seeking_talent,
-            seeking_description=seeking_description,
-            website_link=website
-        )
+            venue = Venue(
+                name=name,
+                city=city,
+                state=state,
+                address=address,
+                phone=phone,
+                image_link=image_link,
+                facebook_link=facebook_link,
+                genres=genres,
+                seeking_talent=seeking_talent,
+                seeking_description=seeking_description,
+                website_link=website
+            )
 
-        db.session.add(venue)
-        db.session.commit()
-        flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    except Exception:
-        db.session.rollback()
-        flash(
-            'An error occurred. Venue '
-            + request.form['name']
-            + ' could not be listed.'
-        )
-    finally:
-        db.session.close()
-    return render_template('pages/home.html')
+            db.session.add(venue)
+            db.session.commit()
+            flash('Venue ' + request.form['name'] +
+                  ' was successfully listed!')
+        except Exception:
+            db.session.rollback()
+            flash(
+                'An error occurred. Venue '
+                + request.form['name']
+                + ' could not be listed.'
+            )
+        finally:
+            db.session.close()
+        return render_template('pages/home.html')
+    else:
+        for field, message in form.errors.items():
+            flash(field + ' - ' + str(message), 'error')
+    return render_template('forms/new_venue.html', form=form)
 
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
@@ -321,7 +327,7 @@ def edit_artist(artist_id):
     form.city.default = artist.city
     form.state.default = artist.state
     form.phone.default = artist.phone
-    form.genres.default = artist.genres.split(",")
+    form.genres.default = artist.genres
     form.image_link.default = artist.image_link
     form.facebook_link.default = artist.facebook_link
     form.website_link.default = artist.website_link
@@ -342,7 +348,7 @@ def edit_artist_submission(artist_id):
         artist.city = form.city.data
         artist.state = form.state.data
         artist.phone = form.phone.data
-        artist.genres = ",".join(form.genres.data)
+        artist.genres = form.genres.data
         artist.image_link = form.image_link.data
         artist.facebook_link = form.facebook_link.data
         artist.website_link = form.website_link.data
@@ -371,7 +377,7 @@ def edit_venue(venue_id):
     form.phone.default = venue.phone
     form.image_link.default = venue.image_link
     form.facebook_link.default = venue.facebook_link
-    form.genres.default = venue.genres.split(",")
+    form.genres.default = venue.genres
     form.seeking_talent.default = venue.seeking_talent
     form.seeking_description.default = venue.seeking_description
     form.website_link.default = venue.website_link
@@ -393,7 +399,7 @@ def edit_venue_submission(venue_id):
         venue.phone = form.phone.data
         venue.image_link = form.image_link.data
         venue.facebook_link = form.facebook_link.data
-        venue.genres = ",".join(form.genres.data)
+        venue.genres = form.genres.data
         venue.seeking_talent = form.seeking_talent.data
         venue.seeking_description = form.seeking_description.data
         venue.website = form.website_link.data
@@ -419,43 +425,48 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-    try:
-        form = ArtistForm(request.form)
+    form = ArtistForm(request.form)
+    if form.validate_on_submit():
+        try:
+            name = form.name.data.strip()
+            city = form.city.data.strip()
+            state = form.state.data.strip()
+            phone = form.phone.data.strip()
+            genres = form.genres.data
+            image_link = form.image_link.data.strip()
+            facebook_link = form.facebook_link.data.strip()
+            website = form.website_link.data.strip()
+            seeking_venue = form.seeking_venue.data
+            seeking_description = form.seeking_description.data.strip()
 
-        name = form.name.data.strip()
-        city = form.city.data.strip()
-        state = form.state.data.strip()
-        phone = form.phone.data.strip()
-        genres = ",".join(form.genres.data)
-        image_link = form.image_link.data.strip()
-        facebook_link = form.facebook_link.data.strip()
-        website = form.website_link.data.strip()
-        seeking_venue = form.seeking_venue.data
-        seeking_description = form.seeking_description.data.strip()
+            artist = Artist(
+                name=name,
+                city=city,
+                state=state,
+                phone=phone,
+                genres=genres,
+                image_link=image_link,
+                facebook_link=facebook_link,
+                website_link=website,
+                seeking_venue=seeking_venue,
+                seeking_description=seeking_description
+            )
 
-        artist = Artist(
-            name=name,
-            city=city,
-            state=state,
-            phone=phone,
-            genres=genres,
-            image_link=image_link,
-            facebook_link=facebook_link,
-            website_link=website,
-            seeking_venue=seeking_venue,
-            seeking_description=seeking_description
-        )
-
-        db.session.add(artist)
-        db.session.commit()
-        flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    except Exception:
-        db.session.rollback()
-        flash('An error occurred. Artist ' +
-              request.form["name"] + ' could not be listed.')
-    finally:
-        db.session.close()
-    return render_template('pages/home.html')
+            db.session.add(artist)
+            db.session.commit()
+            flash('Artist ' + request.form['name'] +
+                  ' was successfully listed!')
+        except Exception:
+            db.session.rollback()
+            flash('An error occurred. Artist ' +
+                  request.form["name"] + ' could not be listed.')
+        finally:
+            db.session.close()
+        return render_template('pages/home.html')
+    else:
+        for field, message in form.errors.items():
+            flash(field + ' - ' + str(message), 'error')
+    return render_template('forms/new_artist.html', form=form)
 
 
 #  Shows
